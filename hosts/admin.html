@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSCAR · 报名管理</title>
+<style>
+  :root { --bg:#FAF8F3; --ink:#2C2A26; --accent:#8B6914; --border:#E8E2D4; --muted:#6B6B6B; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Source Han Serif SC','Noto Serif SC',Georgia,serif; background:var(--bg); color:var(--ink); padding:40px 24px; }
+  .container { max-width:960px; margin:0 auto; }
+  h1 { font-size:1.3rem; color:var(--accent); letter-spacing:0.1em; margin-bottom:24px; }
+  .stats { display:flex; gap:24px; margin-bottom:32px; }
+  .stat { padding:16px 24px; background:#fff; border:1px solid var(--border); border-radius:4px; }
+  .stat .num { font-size:2rem; font-weight:600; color:var(--accent); }
+  .stat .label { font-size:0.8rem; color:var(--muted); }
+  table { width:100%; border-collapse:collapse; background:#fff; border-radius:4px; overflow:hidden; border:1px solid var(--border); font-size:0.85rem; }
+  th { background:#1a1a2e; color:#B4A078; padding:12px 14px; text-align:left; font-weight:500; }
+  td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#f5f0e6; }
+  .mono { font-family:'JetBrains Mono',monospace; font-size:0.8rem; }
+  .tag { display:inline-block; padding:2px 8px; background:var(--border); border-radius:3px; font-size:0.75rem; color:var(--muted); }
+  #gate { max-width:400px; margin:120px auto; text-align:center; }
+  #gate input { width:100%; padding:12px; border:1px solid var(--border); border-radius:4px; font-size:1rem; margin-bottom:12px; }
+  #gate button { padding:10px 24px; background:var(--accent); color:#fff; border:none; border-radius:4px; cursor:pointer; }
+  #gate .hint { font-size:0.78rem; color:var(--muted); margin-top:12px; }
+  .loading { text-align:center; padding:60px; color:var(--muted); }
+  .footer { text-align:center; margin-top:40px; font-size:0.8rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+  <div id="gate">
+    <h1>OSCAR · 报名管理</h1>
+    <p style="margin-bottom:16px;color:var(--muted);font-size:0.9rem;">输入管理密码</p>
+    <input type="password" id="pw" placeholder="密码" onkeydown="if(event.key==='Enter')enter()">
+    <br>
+    <button onclick="enter()">进入</button>
+    <p class="hint" id="pw-error" style="display:none;color:var(--accent);margin-top:8px;">密码错误</p>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <h1>OSCAR · 报名数据</h1>
+    <div class="stats">
+      <div class="stat"><div class="num" id="total">0</div><div class="label">总报名人数</div></div>
+      <div class="stat"><div class="num" id="last24h">0</div><div class="label">最近 24 小时</div></div>
+    </div>
+    <table>
+      <thead><tr><th>编号</th><th>联系方式</th><th>参与理由</th><th>如何获知</th><th>场次</th><th>时间</th></tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div class="footer">
+      数据来自 <code class="mono">raw.githubusercontent.com</code> · 
+      <button onclick="refresh()" style="background:none;border:none;color:var(--accent);cursor:pointer;font-family:inherit;font-size:0.85rem;">刷新</button> ·
+      <a href="https://osbook.opensourceway.blog/" style="color:var(--accent);">开源之书</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const ADMIN_PW = 'oscar-2026-09-06';  // 修改此密码！
+const RAW_BASE = 'https://raw.githubusercontent.com/oscar-open-source-book/oscar-signups/main';
+
+function enter() {
+  if (document.getElementById('pw').value === ADMIN_PW) {
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    refresh();
+  } else {
+    document.getElementById('pw-error').style.display = 'block';
+  }
+}
+
+async function refresh() {
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading"><span class="loading">加载中...</span></td></tr>';
+
+  try {
+    // List signups directory via GitHub API (raw content of signups/ folder isn't listed directly)
+    // We use a hidden manifest file. For now, read signups/ via GitHub REST API.
+    const resp = await fetch('https://api.github.com/repos/oscar-open-source-book/oscar-signups/contents/signups');
+    const files = (await resp.json()).filter(f => f.name.endsWith('.json')).map(f => f.name);
+
+    const now = Date.now();
+    let total = 0, last24h = 0;
+
+    for (const fname of files.sort()) {
+      const slug = fname.replace('.json','');
+      const dataResp = await fetch(`${RAW_BASE}/signups/${fname}`);
+      if (!dataResp.ok) continue;
+      const data = await dataResp.json();
+      total++;
+      const ts = new Date(data.signed_at).getTime();
+      if (now - ts < 86400000) last24h++;
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td class="mono">${data.ticket}</td>
+        <td>${esc(data.contact)}</td>
+        <td>${esc(data.reason || '—')}</td>
+        <td><span class="tag">${esc(data.how_found || '—')}</span></td>
+        <td><span class="tag">${esc(data.meeting || '—')}</span></td>
+        <td class="mono" style="white-space:nowrap;">${formatTime(data.signed_at)}</td>
+      `;
+      tbody.appendChild(row);
+    }
+
+    document.getElementById('total').textContent = total;
+    document.getElementById('last24h').textContent = last24h;
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="loading">加载失败: ${esc(e.message)}</td></tr>`;
+  }
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function formatTime(s) { return s ? new Date(s).toLocaleString('zh-CN') : '—'; }
+
+refresh = refresh;
+</script>
+</body>
+</html>

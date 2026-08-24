@@ -1,0 +1,50 @@
+name: Anonymous Signup
+
+on:
+  repository_dispatch:
+    types: [anonymous-signup]
+
+jobs:
+  signup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Write submission
+        run: |
+          mkdir -p signups signups/status
+
+          TICKET="${{ github.event.client_payload.data.ticket }}"
+          SLUG="${TICKET//-/}"
+
+          # Validate required field
+          if [ -z "${{ github.event.client_payload.data.contact }}" ]; then
+            echo "ERROR: contact field is required"
+            exit 1
+          fi
+
+          # Write signup record
+          cat > "signups/${SLUG}.json" << JSONEOF
+          {
+            "ticket": "${{ github.event.client_payload.data.ticket }}",
+            "contact": "${{ github.event.client_payload.data.contact }}",
+            "reason": "${{ github.event.client_payload.data.reason }}",
+            "how_found": "${{ github.event.client_payload.data.how_found }}",
+            "signed_at": "${{ github.event.client_payload.data.signed_at }}",
+            "meeting": "${{ github.event.client_payload.data.meeting }}"
+          }
+          JSONEOF
+
+          # Write status file for polling
+          echo '{"ok": true}' > "signups/status/${SLUG}.json"
+
+          # Commit
+          git add signups/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git diff --cached --quiet || \
+            git commit -m "chore(signup): add ${SLUG}" && \
+            git push
+

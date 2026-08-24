@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSCAR · 开源之书·共读 · 报名</title>
+<style>
+  :root {
+    --bg: #FAF8F3;
+    --ink: #2C2A26;
+    --accent: #8B6914;
+    --accent-light: #B4A078;
+    --muted: #6B6B6B;
+    --border: #E8E2D4;
+    --success: #2D6A4F;
+    --error: #B83232;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', Georgia, serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+  .container {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 60px 24px 40px;
+  }
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .header h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 0.95rem;
+    color: var(--muted);
+  }
+  .ticket-banner {
+    background: #1a1a2e;
+    color: #B4A078;
+    padding: 14px 18px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 12px;
+  }
+  .ticket-banner .label {
+    color: #888;
+    font-size: 0.75rem;
+  }
+  .ticket-banner .value {
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    flex: 1;
+    text-align: right;
+    word-break: break-all;
+  }
+  .ticket-banner .copy-btn {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 0.75rem;
+    white-space: nowrap;
+  }
+  .section {
+    margin-bottom: 32px;
+  }
+  .section h3 {
+    font-size: 0.9rem;
+    color: var(--accent);
+    margin-bottom: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+  .field {
+    margin-bottom: 18px;
+  }
+  .field label {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .field label .hint {
+    color: var(--muted);
+    font-size: 0.78rem;
+  }
+  .field input,
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.9rem;
+    font-family: inherit;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color 0.2s;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus {
+    outline: none;
+    border-color: var(--accent-light);
+    box-shadow: 0 0 0 2px rgba(180,160,120,0.15);
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .submit-btn {
+    width: 100%;
+    padding: 14px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    letter-spacing: 0.05em;
+  }
+  .submit-btn:hover { background: #6d5310; }
+  .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+  .result {
+    margin-top: 24px;
+    padding: 16px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+    display: none;
+  }
+  .result.success {
+    display: block;
+    background: #e8f5e9;
+    border: 1px solid var(--success);
+    color: var(--success);
+  }
+  .result.error {
+    display: block;
+    background: #fde8e8;
+    border: 1px solid var(--error);
+    color: var(--error);
+  }
+  .result .detail {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    margin-top: 6px;
+    color: var(--muted);
+    word-break: break-all;
+  }
+  .lookup-section {
+    margin-top: 48px;
+    padding-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .lookup-section h3 {
+    text-align: center;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .lookup-row {
+    display: flex;
+    gap: 8px;
+  }
+  .lookup-row input { flex: 1; }
+  .lookup-row button {
+    padding: 10px 16px;
+    background: var(--accent-light);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .lookup-result {
+    margin-top: 12px;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.85rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+    display: none;
+  }
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #ddd;
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    vertical-align: middle;
+    margin-right: 6px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>OSCAR · 开源之书·共读</h1>
+    <p>线下分享 · 匿名报名</p>
+  </div>
+
+  <div class="ticket-banner">
+    <span class="label">你的报名编号</span>
+    <span class="value" id="ticket-display">—</span>
+    <button class="copy-btn" onclick="copyTicket()">复制</button>
+  </div>
+
+  <form id="signup-form">
+    <div class="section">
+      <h3>报名信息</h3>
+      <div class="field">
+        <label>联系方式 <span class="hint">（必填）手机或微信</span></label>
+        <input type="text" id="contact" required placeholder="手机或微信号">
+      </div>
+      <div class="field">
+        <label>参与理由 <span class="hint">（选填）</span></label>
+        <textarea id="reason" placeholder="为什么想参加这次共读？"></textarea>
+      </div>
+      <div class="field">
+        <label>如何获知读书会 <span class="hint">（选填）</span></label>
+        <select id="how_found">
+          <option value="">— 请选择 —</option>
+          <option value="blog">开源之道 博客</option>
+          <option value="osbook">开源之书 网站</option>
+          <option value="weixin">微信公众号</option>
+          <option value="recommend">朋友推荐</option>
+          <option value="twitter">Twitter / X</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>场次 <span class="hint">（必填）</span></label>
+        <select id="meeting" required>
+          <option value="">— 选择场次 —</option>
+          <option value="oscar-2026-09-06">2026.09.06 OSCAR·共读·上海站</option>
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn">提交报名</button>
+  </form>
+
+  <div class="result" id="result"></div>
+
+  <div class="lookup-section">
+    <h3>查看已提交的报名</h3>
+    <div class="lookup-row">
+      <input type="text" id="lookup-ticket" placeholder="粘贴你的报名编号">
+      <button onclick="lookup()">查看</button>
+    </div>
+    <div class="lookup-result" id="lookup-result"></div>
+  </div>
+
+  <div class="footer">
+    开源之道 · 开源之书 · OSCAR<br>
+    <a href="https://osbook.opensourceway.blog/" style="color:var(--accent);">→ 回到开源之书</a>
+  </div>
+</div>
+
+<script>
+const DISPATCH_URL = 'https://api.github.com/repos/oscar-open-source-book/oscar-signups/dispatches';
+
+// Generate ticket ID on load
+const ticketId = crypto.randomUUID();
+document.getElementById('ticket-display').textContent = ticketId;
+
+async function copyTicket() {
+  try {
+    await navigator.clipboard.writeText(ticketId);
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = '已复制';
+    setTimeout(() => btn.textContent = '复制', 1500);
+  } catch (e) {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = ticketId;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  }
+}
+
+document.getElementById('signup-form').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = e.target.querySelector('.submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>提交中...';
+
+  const data = {
+    ticket: ticketId,
+    contact: document.getElementById('contact').value,
+    reason: document.getElementById('reason').value,
+    how_found: document.getElementById('how_found').value,
+    meeting: document.getElementById('meeting').value,
+    signed_at: new Date().toISOString()
+  };
+
+  try {
+    const resp = await fetch(DISPATCH_URL, {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        event_type: 'anonymous-signup',
+        client_payload: { data }
+      })
+    });
+
+    if (!resp.ok && resp.status !== 204) {
+      throw new Error(`GitHub API ${resp.status}: ${await resp.text()}`);
+    }
+
+    // Poll for confirmation
+    const slug = ticketId.replace(/-/g, '');
+    let ok = false;
+    for (let i = 0; i < 30 && !ok; i++) {
+      await new Promise(r => setTimeout(r, 2000));
+      const r = await fetch(`/signups/status/${slug}.json`);
+      if (r.ok) ok = (await r.json()).ok;
+    }
+
+    const result = document.getElementById('result');
+    if (ok) {
+      result.className = 'result success';
+      result.innerHTML = `✓ 报名成功！你的报名编号：<code style="font-family:monospace;">${ticketId}</code><div class="detail">如需修改请保存此编号</div>`;
+    } else {
+      result.className = 'result error';
+      result.innerHTML = '✗ 提交未完成，请稍后重试或联系管理员。';
+    }
+  } catch (err) {
+    const result = document.getElementById('result');
+    result.className = 'result error';
+    result.innerHTML = `✗ ${err.message}<div class="detail">若持续失败请截图联系管理员</div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '提交报名';
+  }
+});
+
+async function lookup() {
+  const ticket = document.getElementById('lookup-ticket').value.trim();
+  if (!ticket) return;
+  const slug = ticket.replace(/-/g, '');
+  const r = await fetch(`/signups/${slug}.json`);
+  const div = document.getElementById('lookup-result');
+  if (r.ok) {
+    const d = await r.json();
+    div.textContent = `联系方式: ${d.contact}\n如何获知: ${d.how_found || '—'}\n参与理由: ${d.reason || '—'}\n场次: ${d.meeting || '—'}\n提交时间: ${d.signed_at}`;
+    div.style.display = 'block';
+  } else {
+    div.textContent = '未找到该报名编号。请检查编号是否正确。';
+    div.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
